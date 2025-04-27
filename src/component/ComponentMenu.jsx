@@ -1,4 +1,5 @@
 import { useRef } from 'react';
+import './ComponentMenu.css';
 
 export default function ComponentMenu({ position, insertComponent, setShowComponentMenu }) {
   const componentMenuRef = useRef(null);
