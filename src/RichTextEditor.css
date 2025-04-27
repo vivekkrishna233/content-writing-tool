@@ -43,7 +43,7 @@ body {
 /* Editor Container */
 .editor-container {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  max-width: 1200px;
+  max-width: 100% !important;
   margin: 0 auto;
   border: 1px solid var(--editor-border);
   border-radius: var(--radius-md);
@@ -212,9 +212,10 @@ body {
 
 /* Editor Content */
 .editor-content-wrapper {
+  min-width: 1400px !important;
   background-color: var(--editor-content-bg);
   padding: 16px;
-  min-height: 400px;
+  min-height: 800px;
   
 }
 

@@ -204,7 +204,7 @@ export default function RichTextEditor() {
       onMouseUp={endDrag}
     >
       <div className="editor-header">
-        <h1 className="editor-title">Advanced Content Editor</h1>
+        <h1 className="editor-title">Content Editor</h1>
         <button 
           className="theme-toggle-btn"
           onClick={() => setDarkMode(!darkMode)}
