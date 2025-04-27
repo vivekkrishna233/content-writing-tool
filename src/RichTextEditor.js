@@ -30,6 +30,8 @@ export default function RichTextEditor() {
   const [draggedComponent, setDraggedComponent] = useState(null);
   const [darkMode, setDarkMode] = useState(false);
   const editorRef = useRef(null);
+  const contentUpdateRef = useRef(false); // Add this useRef for content updates from history
+  const [cursorPosition, setCursorPosition] = useState(0); // Add state for cursor position
   
   // Format text with document.execCommand
   const formatText = (command, value = null) => {
@@ -61,6 +63,15 @@ export default function RichTextEditor() {
   // Handle text selection
   const handleSelection = (show = true) => {
     setShowFormatMenu(show);
+    
+    // Store cursor position when selection changes
+    if (window.getSelection()) {
+      const selection = window.getSelection();
+      if (selection.rangeCount > 0) {
+        const range = selection.getRangeAt(0);
+        setCursorPosition(range.startOffset);
+      }
+    }
   };
   
   // Show component menu at right-click position
@@ -128,6 +139,63 @@ export default function RichTextEditor() {
     setIsDragging(false);
     setDraggedComponent(null);
   };
+  
+  // Effect to handle content updates from history manager
+  useEffect(() => {
+    if (contentUpdateRef.current && editorRef.current) {
+      // Update the editor's HTML content
+      editorRef.current.innerHTML = content;
+      
+      // Restore cursor position if needed
+      if (cursorPosition) {
+        try {
+          const selection = window.getSelection();
+          const range = document.createRange();
+          
+          // Find the appropriate text node and position
+          let currentNode = editorRef.current;
+          let currentPos = 0;
+          
+          // Simple traversal to find the right position
+          // In a real app, you'd want a more sophisticated algorithm
+          function findPosition(node) {
+            if (node.nodeType === Node.TEXT_NODE) {
+              if (currentPos + node.length >= cursorPosition) {
+                range.setStart(node, cursorPosition - currentPos);
+                return true;
+              }
+              currentPos += node.length;
+            } else {
+              for (let i = 0; i < node.childNodes.length; i++) {
+                if (findPosition(node.childNodes[i])) {
+                  return true;
+                }
+              }
+            }
+            return false;
+          }
+          
+          // If we can't find the exact position, just put cursor at the start
+          if (!findPosition(currentNode)) {
+            if (editorRef.current.firstChild) {
+              range.setStart(editorRef.current.firstChild, 0);
+            } else {
+              range.setStart(editorRef.current, 0);
+            }
+          }
+          
+          range.collapse(true);
+          selection.removeAllRanges();
+          selection.addRange(range);
+        } catch (e) {
+          console.error("Error restoring cursor position:", e);
+        }
+      }
+      
+      // Reset the flag
+      contentUpdateRef.current = false;
+    }
+  }, [content, cursorPosition, contentUpdateRef.current]);
 
   return (
     <div 
@@ -279,7 +347,9 @@ export default function RichTextEditor() {
         <HistoryManager
           content={content}
           setContent={setContent}
-          editorRef={editorRef}
+          cursorPosition={cursorPosition}
+          setCursorPosition={setCursorPosition}
+          contentUpdateRef={contentUpdateRef} // Pass the ref instead of a setter
         />
       </div>
       

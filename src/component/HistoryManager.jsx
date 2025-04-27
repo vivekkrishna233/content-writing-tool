@@ -5,7 +5,7 @@ export default function HistoryManager({
   setContent,
   cursorPosition,
   setCursorPosition,
-  setContentUpdateRef
+  contentUpdateRef // Changed from setContentUpdateRef to contentUpdateRef
 }) {
   const [history, setHistory] = useState([{ content: '', cursorPosition: 0 }]);
   const [currentStep, setCurrentStep] = useState(0);
@@ -104,9 +104,13 @@ export default function HistoryManager({
       
       // Update content and cursor position
       setContent(prevState.content);
-      setContentUpdateRef({ current: true });
-      setCursorPosition(prevState.cursorPosition);
       
+      // Properly update the ref by setting its current property
+      if (contentUpdateRef && typeof contentUpdateRef === 'object') {
+        contentUpdateRef.current = true;
+      }
+      
+      setCursorPosition(prevState.cursorPosition);
       setCurrentStep(prevStep);
     }
   };
@@ -119,9 +123,13 @@ export default function HistoryManager({
       
       // Update content and cursor position
       setContent(nextState.content);
-      setContentUpdateRef({ current: true });
-      setCursorPosition(nextState.cursorPosition);
       
+      // Properly update the ref by setting its current property
+      if (contentUpdateRef && typeof contentUpdateRef === 'object') {
+        contentUpdateRef.current = true;
+      }
+      
+      setCursorPosition(nextState.cursorPosition);
       setCurrentStep(nextStep);
     }
   };
