@@ -318,7 +318,7 @@ export default function RichTextEditor() {
         setDarkMode={setDarkMode}
       />
       
-      \
+      
       
       {/* Format Menu */}
       {showFormatMenu && (
