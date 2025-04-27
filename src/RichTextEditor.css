@@ -212,7 +212,7 @@ body {
 
 /* Editor Content */
 .editor-content-wrapper {
-  min-width: 1400px !important;
+  min-width: 1200px !important;
   background-color: var(--editor-content-bg);
   padding: 16px;
   min-height: 800px;
