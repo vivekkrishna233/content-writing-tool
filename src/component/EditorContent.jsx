@@ -25,7 +25,7 @@ export default function EditorContent({
 
   // Handle cursor position
   useEffect(() => {
-    if (contentUpdateRef.current && cursorPosition && editorRef.current) {
+    if (contentUpdateRef.current && cursorPosition !== null && editorRef.current) {
       setContentUpdateRef({ current: false });
       
       // Wait for React to update the DOM
@@ -59,7 +59,7 @@ export default function EditorContent({
   // Handle text selection
   const onMouseUp = () => {
     const selection = window.getSelection();
-    if (selection.toString().length > 0) {
+    if (selection && selection.toString().length > 0) {
       const range = selection.getRangeAt(0);
       const rect = range.getBoundingClientRect();
       setFormatMenuPosition({
@@ -76,7 +76,7 @@ export default function EditorContent({
   const saveCurrentCursorPosition = () => {
     try {
       const selection = window.getSelection();
-      if (selection.rangeCount === 0) return null;
+      if (!selection || selection.rangeCount === 0) return null;
       
       const range = selection.getRangeAt(0);
       if (!range.collapsed) return null; // Don't save if there's a selection
@@ -101,12 +101,15 @@ export default function EditorContent({
       false
     );
     
+    // Track if we've found our target node
+    let foundTarget = false;
+    
     // Walk the tree until we find the node containing the selection
     let node;
-    while ((node = walker.nextNode())) {
+    while ((node = walker.nextNode()) && !foundTarget) {
       if (range.startContainer === node) {
         charCount += range.startOffset;
-        break;
+        foundTarget = true;
       } else if (node.nodeType === Node.TEXT_NODE) {
         charCount += node.length;
       } else if (node.nodeName === 'BR') {
@@ -119,10 +122,14 @@ export default function EditorContent({
   
   // Helper function to find node and offset at given character position
   const findNodeAndOffsetAtPosition = (rootNode, targetOffset) => {
-    // Text nodes only
+    // Bail early for invalid inputs
+    if (!rootNode || targetOffset < 0) return null;
+    
+    // Handle text nodes directly
     if (rootNode.nodeType === Node.TEXT_NODE) {
-      if (targetOffset <= rootNode.length) {
-        return { node: rootNode, offset: targetOffset };
+      const length = rootNode.length || 0;
+      if (targetOffset <= length) {
+        return { node: rootNode, offset: Math.min(targetOffset, length) };
       }
       return null;
     }
@@ -134,54 +141,59 @@ export default function EditorContent({
     
     // Search child nodes
     let currentOffset = 0;
-    for (const childNode of rootNode.childNodes) {
-      // For text nodes, just add their length
+    let childNodes = Array.from(rootNode.childNodes);
+    
+    // Handle empty editor case
+    if (childNodes.length === 0) {
+      return { node: rootNode, offset: 0 };
+    }
+    
+    for (let i = 0; i < childNodes.length; i++) {
+      const childNode = childNodes[i];
+      
+      // For text nodes, check if target position is within this node
       if (childNode.nodeType === Node.TEXT_NODE) {
-        if (currentOffset + childNode.length >= targetOffset) {
+        const length = childNode.length;
+        if (currentOffset + length >= targetOffset) {
           return { 
             node: childNode, 
             offset: targetOffset - currentOffset 
           };
         }
-        currentOffset += childNode.length;
+        currentOffset += length;
       } 
-      // For element nodes, recursively search
-      else if (childNode.nodeType === Node.ELEMENT_NODE) {
-        // Special handling for BR tags
-        if (childNode.tagName === 'BR') {
-          currentOffset += 1;
-          if (currentOffset === targetOffset) {
-            return { 
-              node: rootNode, 
-              offset: Array.from(rootNode.childNodes).indexOf(childNode) + 1 
-            };
-          }
-        } 
-        // For other elements, search within
-        else {
-          const result = findNodeAndOffsetAtPosition(childNode, targetOffset - currentOffset);
-          if (result) {
-            return result;
-          }
-          
-          // If no result in child, add its text content length
-          currentOffset += childNode.textContent.length;
+      // Handle BR tags specially
+      else if (childNode.nodeName === 'BR') {
+        currentOffset += 1;
+        if (currentOffset === targetOffset) {
+          // Position after this BR
+          return { 
+            node: rootNode, 
+            offset: i + 1
+          };
         }
+      } 
+      // For other elements, recursively search
+      else if (childNode.nodeType === Node.ELEMENT_NODE) {
+        const result = findNodeAndOffsetAtPosition(childNode, targetOffset - currentOffset);
+        if (result) {
+          return result;
+        }
+        
+        // If no result in child, add its text content length
+        const textLength = childNode.textContent ? childNode.textContent.length : 0;
+        currentOffset += textLength;
       }
     }
     
-    // If we've gone through all children and haven't found the position,
-    // return the last possible position in this node
-    if (rootNode.childNodes.length > 0) {
-      const lastChild = rootNode.childNodes[rootNode.childNodes.length - 1];
-      if (lastChild.nodeType === Node.TEXT_NODE) {
-        return { node: lastChild, offset: lastChild.length };
-      } else {
-        return { node: rootNode, offset: rootNode.childNodes.length };
-      }
+    // If we've gone through all children and the position is at or beyond the end
+    // return the position at the end of the content
+    if (currentOffset <= targetOffset) {
+      const lastIndex = childNodes.length;
+      return { node: rootNode, offset: lastIndex };
     }
     
-    return { node: rootNode, offset: 0 };
+    return null;
   };
   
   // Handle input and preserve cursor position
@@ -193,8 +205,8 @@ export default function EditorContent({
     // Check if the content is empty or just contains empty paragraphs/line breaks
     const strippedContent = editorContent.replace(/<[^>]*>/g, '').trim();
     
-    // Handle placeholder text behavior
-    if (isPlaceholderActive && strippedContent !== 'Start typing here...') {
+    // Only remove placeholder on actual content
+    if (isPlaceholderActive && strippedContent !== '' && strippedContent !== 'Start typing here...') {
       setIsPlaceholderActive(false);
       setContent(editorContent);
       
@@ -239,30 +251,122 @@ export default function EditorContent({
     }
   };
   
-  // Handle first keydown to clear placeholder
+  // Fix for backspace issue - handle keydown events
   const handleKeyDown = (e) => {
-    if (isPlaceholderActive) {
-      // Don't immediately clear on navigation keys
-      const nonContentKeys = [
-        'Tab', 'Shift', 'Control', 'Alt', 'Meta', 
-        'CapsLock', 'Escape', 'ArrowLeft', 'ArrowRight', 
-        'ArrowUp', 'ArrowDown', 'Home', 'End', 'PageUp', 'PageDown'
-      ];
+    if (e.key === 'Backspace') {
+      const selection = window.getSelection();
+      if (!selection || selection.rangeCount === 0) return;
       
-      if (!nonContentKeys.includes(e.key)) {
-        // If it's a character key, delete key, or backspace key
-        if (e.key === 'Backspace' || e.key === 'Delete') {
-          // Let the default handler work but mark placeholder as gone
-          setIsPlaceholderActive(false);
-        } else if (e.key.length === 1) { // Character key
-          // Clear placeholder and insert the character
+      const range = selection.getRangeAt(0);
+      
+      // If cursor is at the beginning of the editor and content is empty except for formatting
+      if (range.startOffset === 0 && range.collapsed) {
+        const strippedContent = editorRef.current.innerHTML.replace(/<[^>]*>/g, '').trim();
+        
+        if (strippedContent === '' || strippedContent === 'Start typing here...') {
           e.preventDefault();
-          setIsPlaceholderActive(false);
-          setContent('<p>' + e.key + '</p>');
+          // Don't do anything - prevent cursor from jumping
+          return;
+        }
+      }
+    }
+    
+    // Handle Enter key press - FIXED HERE
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      
+      // Find current selection
+      const selection = window.getSelection();
+      if (!selection || selection.rangeCount === 0) return;
+      
+      const range = selection.getRangeAt(0);
+      
+      // Clear placeholder if active
+      if (isPlaceholderActive) {
+        setIsPlaceholderActive(false);
+        setContent('<p><br></p>');
+        setContentUpdateRef({ current: true });
+        setCursorPosition(0);
+        return;
+      }
+      
+      // Find current paragraph
+      let currentNode = range.startContainer;
+      let currentParagraph = currentNode;
+      
+      // Find the closest paragraph parent
+      while (currentParagraph && currentParagraph.nodeName !== 'P') {
+        currentParagraph = currentParagraph.parentNode;
+        if (currentParagraph === editorRef.current) {
+          // If we reach the editor root without finding a paragraph, create one
+          const newP = document.createElement('p');
+          newP.innerHTML = '<br>';
+          editorRef.current.appendChild(newP);
           
-          // Position cursor after the inserted character
+          // Insert at the end
+          const newRange = document.createRange();
+          newRange.setStart(newP, 0);
+          newRange.collapse(true);
+          selection.removeAllRanges();
+          selection.addRange(newRange);
+          
+          // Update content
+          setContent(editorRef.current.innerHTML);
+          const newPos = editorRef.current.innerHTML.length;
           setContentUpdateRef({ current: true });
-          setCursorPosition(1); // After the first character
+          setCursorPosition(newPos);
+          return;
+        }
+      }
+      
+      // Create new paragraph
+      const newParagraph = document.createElement('p');
+      newParagraph.innerHTML = '<br>';
+      
+      if (currentParagraph) {
+        if (currentNode.nodeType === Node.TEXT_NODE) {
+          const textBeforeCursor = currentNode.textContent.substring(0, range.startOffset);
+          const textAfterCursor = currentNode.textContent.substring(range.startOffset);
+          
+          // Set text before cursor to current paragraph
+          currentNode.textContent = textBeforeCursor;
+          
+          // Move text after cursor to new paragraph
+          if (textAfterCursor) {
+            newParagraph.innerHTML = '';
+            newParagraph.appendChild(document.createTextNode(textAfterCursor));
+          }
+        }
+        
+        // Insert new paragraph after current one
+        if (currentParagraph.nextSibling) {
+          editorRef.current.insertBefore(newParagraph, currentParagraph.nextSibling);
+        } else {
+          editorRef.current.appendChild(newParagraph);
+        }
+        
+        // Set cursor to beginning of new paragraph
+        const newRange = document.createRange();
+        if (newParagraph.firstChild) {
+          if (newParagraph.firstChild.nodeType === Node.TEXT_NODE) {
+            newRange.setStart(newParagraph.firstChild, 0);
+          } else {
+            newRange.setStart(newParagraph, 0);
+          }
+        } else {
+          newRange.setStart(newParagraph, 0);
+        }
+        
+        newRange.collapse(true);
+        selection.removeAllRanges();
+        selection.addRange(newRange);
+        
+        // Update content and cursor position
+        setContent(editorRef.current.innerHTML);
+        const newPosition = saveCurrentCursorPosition();
+        if (newPosition !== null) {
+          setContentUpdateRef({ current: true });
+          setCursorPosition(newPosition);
         }
       }
     }

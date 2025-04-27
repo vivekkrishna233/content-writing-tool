@@ -1,22 +1,39 @@
+import { useState, useRef } from 'react';
 import { Bold, Italic, Underline, List, Code, Quote, Heading1, Heading2 } from 'lucide-react';
+import HistoryManager from './component/HistoryManager';
 
-export default function EditorToolbar() {
+export default function EditorToolbar({ 
+  editorRef, 
+  content, 
+  setContent, 
+  cursorPosition, 
+  setCursorPosition, 
+  setContentUpdateRef 
+}) {
   // Format selected text
   const formatText = (command, value = null) => {
+    // Save selection before formatting
+    const selection = window.getSelection();
+    const range = selection.getRangeAt(0).cloneRange();
+    
+    // Apply formatting command
     document.execCommand(command, false, value);
     
-    // Update content state after formatting
-    const editor = document.querySelector('.editor-content');
-    if (editor) {
-      // We'll let the EditorContent component handle the state updates
-      const event = new Event('input', { bubbles: true });
-      editor.dispatchEvent(event);
+    // Focus back on the editor immediately
+    editorRef.current?.focus();
+    
+    // Restore selection if needed
+    if (selection.rangeCount === 0) {
+      selection.addRange(range);
     }
     
-    // Focus back on the editor
-    editor?.focus();
+    // Trigger input event to update state
+    if (editorRef.current) {
+      const event = new Event('input', { bubbles: true });
+      editorRef.current.dispatchEvent(event);
+    }
   };
-  
+
   return (
     <div className="editor-toolbar">
       <button className="toolbar-btn" onClick={() => formatText('bold')}>
@@ -45,6 +62,15 @@ export default function EditorToolbar() {
       <button className="toolbar-btn" onClick={() => formatText('formatBlock', '<blockquote>')}>
         <Quote size={16} />
       </button>
+      
+      {/* Reintegrated History Manager to restore undo/redo functionality */}
+      <HistoryManager
+        content={content}
+        setContent={setContent}
+        cursorPosition={cursorPosition}
+        setCursorPosition={setCursorPosition}
+        setContentUpdateRef={setContentUpdateRef}
+      />
     </div>
   );
 }
