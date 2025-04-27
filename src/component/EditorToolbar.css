@@ -1,0 +1,135 @@
+/* Toolbar Layout - Two Row Design */
+.editor-toolbar {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 4px 8px;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dadce0;
+  }
+  
+  /* Top Row - Menu Bar */
+  .editor-menu-bar {
+    display: flex;
+    gap: 24px;
+    padding: 0 8px;
+    height: 36px;
+    align-items: center;
+  }
+  
+  .menu-item {
+    font-size: 14px;
+    color: #5f6368;
+    cursor: pointer;
+    padding: 6px 0;
+  }
+  
+  .menu-item:hover {
+    color: #202124;
+  }
+  
+  /* Bottom Row - Formatting Controls */
+  .formatting-toolbar {
+    display: flex;
+    align-items: center;
+    flex-wrap: nowrap;
+    gap: 4px;
+    padding: 2px 0;
+  }
+  
+  /* Document Type Dropdown */
+  .toolbar-dropdown-btn {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    border: 1px solid #dadce0;
+    border-radius: 4px;
+    background-color: white;
+    cursor: pointer;
+    height: 24px;
+  }
+  
+  /* Font Controls */
+  .toolbar-select {
+    height: 30px;
+    border: 1px solid #dadce0;
+    border-radius: 4px;
+    background-color: white;
+    padding: 0 24px 0 8px;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  
+  .font-family-select {
+    min-width: 120px;
+  }
+  
+  .font-size-select {
+    min-width: 48px;
+  }
+  
+  /* Toolbar Button Groups */
+  .toolbar-section {
+    display: flex;
+    align-items: center;
+    margin-right: 6px;
+  }
+  
+  .toolbar-section:not(:last-child):after {
+    content: "";
+    height: 24px;
+    width: 1px;
+    background-color: #dadce0;
+    margin: 0 6px;
+  }
+  
+  /* Individual Toolbar Buttons */
+  .toolbar-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: none;
+    background-color: transparent;
+    border-radius: 4px;
+    cursor: pointer;
+    color: #5f6368;
+    padding: 4px;
+  }
+  
+  .toolbar-btn:hover {
+    background-color: rgba(60, 64, 67, 0.08);
+  }
+  
+  .toolbar-btn.active {
+    background-color: rgba(26, 115, 232, 0.1);
+    color: #1a73e8;
+  }
+  
+  /* Color picker button */
+  .color-box {
+    width: 14px;
+    height: 14px;
+    border: 1px solid #dadce0;
+  }
+  
+  /* Clear formatting icon */
+  .clear-format-icon {
+    font-size: 14px;
+    line-height: 1;
+  }
+  
+  /* Indent buttons */
+  .indent-decrease-icon,
+  .indent-increase-icon {
+    font-size: 16px;
+  }
+  
+  /* Media query for responsive design */
+  @media (max-width: 768px) {
+    .formatting-toolbar {
+      flex-wrap: wrap;
+    }
+  }
