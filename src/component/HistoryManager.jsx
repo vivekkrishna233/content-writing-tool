@@ -7,7 +7,7 @@ export default function HistoryManager({
   setCursorPosition,
   setContentUpdateRef
 }) {
-  const [history, setHistory] = useState([{ content: '<p>Start typing here...</p>', cursorPosition: 0 }]);
+  const [history, setHistory] = useState([{ content: '', cursorPosition: 0 }]);
   const [currentStep, setCurrentStep] = useState(0);
   const [lastSavedContent, setLastSavedContent] = useState('<p>Start typing here...</p>');
   const [isTyping, setIsTyping] = useState(false);

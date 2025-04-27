@@ -215,7 +215,7 @@ body {
   background-color: var(--editor-content-bg);
   padding: 16px;
   min-height: 400px;
-  overflow-y: auto;
+  
 }
 
 .editor-content {

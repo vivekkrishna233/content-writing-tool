@@ -1,0 +1,193 @@
+/* Mention System Styles */
+.mention-menu {
+    position: absolute;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    width: 280px;
+    max-height: 320px;
+    overflow: hidden;
+    z-index: 1000;
+    border: 1px solid #e4e6eb;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  
+  .mention-menu.dark {
+    background-color: #2d2d3a;
+    border-color: #3a3b3c;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+  
+  .mention-menu-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    border-bottom: 1px solid #f0f0f0;
+    color: #444;
+    font-weight: 500;
+    font-size: 14px;
+  }
+  
+  .mention-menu.dark .mention-menu-header {
+    border-color: #3a3b3c;
+    color: #e4e6eb;
+  }
+  
+  .mention-results {
+    max-height: 260px;
+    overflow-y: auto;
+  }
+  
+  .mention-result-item {
+    display: flex;
+    align-items: center;
+    padding: 10px 16px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    border-left: 3px solid transparent;
+  }
+  
+  .mention-result-item:hover, .mention-result-item.selected {
+    background-color: #f5f7fb;
+    border-left-color: #2684ff;
+  }
+  
+  .mention-menu.dark .mention-result-item:hover, 
+  .mention-menu.dark .mention-result-item.selected {
+    background-color: #3a3b4c;
+    border-left-color: #7b68ee;
+  }
+  
+  .mention-avatar {
+    font-size: 24px;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background-color: #f0f2f5;
+    margin-right: 12px;
+  }
+  
+  .mention-menu.dark .mention-avatar {
+    background-color: #3a3b3c;
+  }
+  
+  .mention-info {
+    flex: 1;
+  }
+  
+  .mention-name {
+    font-weight: 500;
+    font-size: 14px;
+    color: #333;
+    margin-bottom: 2px;
+  }
+  
+  .mention-menu.dark .mention-name {
+    color: #e4e6eb;
+  }
+  
+  .mention-role {
+    font-size: 12px;
+    color: #65676B;
+  }
+  
+  .mention-menu.dark .mention-role {
+    color: #b0b3b8;
+  }
+  
+  .mention-no-results {
+    padding: 16px;
+    text-align: center;
+    color: #65676B;
+    font-size: 14px;
+  }
+  
+  .mention-menu.dark .mention-no-results {
+    color: #b0b3b8;
+  }
+  
+  /* Mention Tag Styles */
+  .mention-tag {
+    background-color: #ebf5ff;
+    border-radius: 4px;
+    padding: 1px 4px;
+    color: #0366d6;
+    font-weight: 500;
+    cursor: default;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin: 0 2px;
+    user-select: all;
+  }
+  
+  .dark-mode .mention-tag {
+    background-color: #253241;
+    color: #58a6ff;
+  }
+  
+  /* Custom scrollbar for mention results */
+  .mention-results::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .mention-results::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+  }
+  
+  .mention-results::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+  }
+  
+  .mention-menu.dark .mention-results::-webkit-scrollbar-track {
+    background: #2d2d3a;
+  }
+  
+  .mention-menu.dark .mention-results::-webkit-scrollbar-thumb {
+    background: #4a4a57;
+  }
+  
+  .mention-results::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+  }
+  
+  .mention-menu.dark .mention-results::-webkit-scrollbar-thumb:hover {
+    background: #5c5c6a;
+  }
+  
+  /* Animation for mention menu */
+  @keyframes mentionFadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .mention-menu {
+    animation: mentionFadeIn 0.2s ease-out;
+  }
+  
+  /* Additional styling for active mentions */
+  .mention-tag:hover {
+    background-color: #dbeafe;
+  }
+  
+  .dark-mode .mention-tag:hover {
+    background-color: #2c3e50;
+  }
+  
+  /* Prevent text selection within mention tags */
+  .mention-tag * {
+    user-select: none;
+  }
